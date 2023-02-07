@@ -1,0 +1,19 @@
+# run application on isolated hosts
+
+## prepare images
+docker pull docker:dind
+docker save --output images/docker-in-docker.tar docker:dind
+
+## import images before first run
+docker load --input images/docker-in-docker.tar
+
+# run docker-in-docker host
+docker network create docker-in-docker
+docker run --privileged --name docker -d \
+    --network docker-in-docker --network-alias docker-in-docker \
+    -e DOCKER_TLS_CERTDIR=/certs \
+    -v ${PWD}/certs-ca:/certs/ca \
+    -v ${PWD}/certs-client:/certs/client \
+    -v ${PWD}/applications:/applications \
+    -p 8080:8080 -p 4444:4444 -p 9000:9000 \
+    docker:dind
